@@ -1,7 +1,7 @@
 export default class ColumnChart {
   subElements = {};
   chartHeight = 50;
-  
+
   constructor(
     {
       data = [],
@@ -47,10 +47,9 @@ export default class ColumnChart {
     });
   }
   _createChartItem = () => {
-    return this._calcValuesArray(this.data, this.chartHeight).reduce((accumString, {value, percents}) => {
-      accumString += `<div style="--value: ${value}" data-tooltip="${percents}%"></div>`;
-      return accumString;
-    }, '');
+    return this._calcValuesArray(this.data, this.chartHeight).map(({value, percents}) => {
+      return `<div style="--value: ${value}" data-tooltip="${percents}%"></div>`;
+    }).join('');
   }
   _getLink = () => {
     return this.link ? `<a class="column-chart__link" href = ${this.link}>View all</a>` : '';
