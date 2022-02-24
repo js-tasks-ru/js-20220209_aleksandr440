@@ -1,31 +1,40 @@
 export default class ColumnChart {
-  constructor({data = [], label, value, link, formatHeading} = {}) {
+  subElements = {};
+  chartHeight = 50;
+  
+  constructor(
+    {
+      data = [],
+      label = '',
+      value = 0,
+      link = '',
+      formatHeading = data => data
+    } = {}) {
     this.data = data;
     this.label = label;
-    this.value = value;
+    this.value = formatHeading(value);
     this.link = link;
-    this.formatHeading = formatHeading;
-    this.chartHeight = 50;
     
     this._render();
   }
-  _createElement = (tag, className) => {
-    const $el = document.createElement(tag);
-    $el.classList.add(className);
-
-    return $el;
-  }
-  _createTitle = () => {
-    const $title = this._createElement('div', 'column-chart__title');
-    $title.textContent = this.label;
-    if (this.link) {
-      const $link = this._createElement('a', 'column-chart__link');
-      $link.href = this.link;
-      $link.textContent = 'View all';
-      $title.append($link);
-    }
-    
-    return $title;
+  _getTemplate = () => {
+    return `
+    <div class="column-chart column-chart_loading" style="--chart-height: ${this.chartHeight}">
+    <div class="column-chart__title">
+      Total ${this.label}
+      ${this._getLink()}
+    </div>
+    <div class="column-chart__container">
+        <div data-element="header" class="column-chart__header">
+          ${this.value}
+        </div>
+        <div data-element="body" class="column-chart__chart">
+        ${this._createChartItem()}
+      </div>
+      <div data-element="js"></div>
+    </div>
+  </div>
+    `;
   }
   _calcValuesArray = (data, chartHeight) => {
     const maxValue = Math.max(...data);
@@ -38,47 +47,48 @@ export default class ColumnChart {
     });
   }
   _createChartItem = () => {
-    return this._calcValuesArray(this.data, this.chartHeight).map(({value, percents}) => {
-      return `<div style="--value: ${value}" data-tooltip="${percents}%"></div>`;
-    });
+    return this._calcValuesArray(this.data, this.chartHeight).reduce((accumString, {value, percents}) => {
+      accumString += `<div style="--value: ${value}" data-tooltip="${percents}%"></div>`;
+      return accumString;
+    }, '');
   }
-  _createChart = () => {
-    const $chartContainer = this._createElement('div', 'column-chart__container');
-    const $chartHeader = this._createElement('div', 'column-chart__header');
-    if (this.formatHeading) this.value = this.formatHeading(this.value);
-
-    $chartHeader.textContent = this.value;
-    $chartHeader.dataset.element = 'header';
+  _getLink = () => {
+    return this.link ? `<a class="column-chart__link" href = ${this.link}>View all</a>` : '';
+  }
+  _render = () => {
+    const $wrapper = document.createElement('div');
+    $wrapper.insertAdjacentHTML('beforeend', this._getTemplate())
     
-    const $chartBody = this._createElement('div', 'column-chart__chart');
-    $chartBody.dataset.element = 'body';
-    $chartContainer.append($chartHeader);
-    $chartContainer.append($chartBody);
+    this.element = $wrapper.firstElementChild;
 
     if (this.data.length) {
-      this._createChartItem().forEach(item => {
-        $chartBody.insertAdjacentHTML('beforeend', item);
-      });
+      this.element.classList.remove('column-chart_loading');
     } 
+    this.subElements = this._getSubElements();
 
-    return $chartContainer;
+  }
+  _getSubElements = () => {
+    const result = {};
+    const $els = document.querySelectorAll('[data-element]');
+    $els.forEach(item => {
+      const name = item.dataset.element;
+      result[name] = item;
+    });
+    return result;
   }
   update = (newData) => {
     this.data = newData;
+    this._calcValuesArray(newData, this.chartHeight);
+    this.subElements.body.innerHTML = this._createChartItem();
   }
   destroy = () => {
+    this.remove();
     this.element = null;
+    this.subElements = {};
   }
   remove = () => {
-    this.destroy();
-  }
-  _render = () => {
-    const $columnChart = this._createElement('div', 'column-chart');
-    if (!this.data.length) $columnChart.classList.add('column-chart_loading');
-    $columnChart.style = '--chart-height: 50';
-    $columnChart.append(this._createTitle());
-    $columnChart.append(this._createChart());
-
-    this.element = $columnChart;
+    if (this.element) {
+      this.element.remove();
+    }
   }
 }
