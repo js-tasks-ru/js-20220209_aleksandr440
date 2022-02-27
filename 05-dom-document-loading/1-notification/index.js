@@ -1,21 +1,13 @@
 export default class NotificationMessage {
   element = {};
-  static instance = 0;
-  constructor(title, {duration = 1000, type = ''} = {}) {
-
+  timerId = 0;
+  static activeNotification;
+  constructor(title, {duration = 1000, type = 'success'} = {}) {
     this.title = title;
     this.duration = duration;
     this.type = type;
 
-    NotificationMessage.instance = this;
-
     this._render();
-
-    if (typeof NotificationMessage.instance === 'object') {
-      return NotificationMessage.instance;
-    }
-
-    return this;
   }
   _getTemplate = () => {
     return `
@@ -37,18 +29,23 @@ export default class NotificationMessage {
     
     this.element = $wrapper.firstElementChild;
   }
-  show = (el) => {
-    if (el) {
-      el.append(this.element);
-    } else {
-      document.body.append(this.element);
+  show = (el = document.body) => {
+    if (NotificationMessage.activeNotification) {
+      NotificationMessage.activeNotification.element.remove();
     }
-    setTimeout(this.remove, this.duration);
+    el.append(this.element);
+    NotificationMessage.activeNotification = this;
+    this.timerId = setTimeout(this.remove, this.duration);
   }
   destroy = () => {
-    this.element.remove();
+    this.element = null;
+    NotificationMessage.activeNotification = null;
   }
   remove = () => {
-    this.destroy();
+    clearTimeout(this.timerId);
+    if (this.element) {
+      this.element.remove();
+    }
   }
 }
+
