@@ -2,31 +2,23 @@ class Tooltip {
   static instace;
   element = {};
   constructor() {
-
-    this._render();
-
     if (Tooltip.instace) {
       return Tooltip.instace;
     }
     Tooltip.instace = this;
   }
-  _render = () => {
+  render = (title) => {
     const $wrapper = document.createElement('div');
-
-    $wrapper.insertAdjacentHTML('beforeend', `
-      <div class="tooltip">This is tooltip</div>
-    `);
-
+    $wrapper.insertAdjacentHTML('beforeend', `<div class="tooltip">${title}</div>`);
     this.element = $wrapper.firstElementChild;
+    document.body.append(this.element);
   }
   _pointerOverHandler = (e) => {
     if (e.target.dataset.tooltip) {
-      this.element.textContent = e.target.dataset.tooltip;
-      document.body.append(this.element);
-      console.log('#####', e.clientY);
-      
-      this.element.style.top = e.clientY + 'px';
-      this.element.style.left = e.clientX + 'px';
+      this.render(e.target.dataset.tooltip);
+      this.element.style.top = (e.offsetY + 10) + 'px';
+      this.element.style.left = (e.offsetX + 10) + 'px';
+
       document.removeEventListener('pointerout', this._pointerOutHandler);
     }
   }
@@ -39,6 +31,14 @@ class Tooltip {
   initialize = () => {
     document.body.addEventListener('pointerover', this._pointerOverHandler);
     document.body.addEventListener('pointerout', this._pointerOutHandler);
+  }
+  destroy = () => {
+    this.element.remove();
+  }
+  remove = () => {
+    this.element = null;
+    document.removeEventListener('pointerover', this._pointerOverHandler);
+    document.removeEventListener('pointerout', this._pointerOutHandler);
   }
 }
 
