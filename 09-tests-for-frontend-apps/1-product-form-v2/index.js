@@ -244,7 +244,7 @@ export default class ProductForm {
   }
   initEventListeners = () => {
     this.subElements.productForm.addEventListener('submit', this.submitFormHandler);
-    this.subElements.uploadImage.addEventListener('click' , this.uploadImageHandler);
+    this.subElements.uploadImage.addEventListener('click', this.uploadImageHandler);
     this.subElements.imageListContainer.addEventListener('click', (event) => {
       
       if ('deleteHandle' in event.target.dataset) {
