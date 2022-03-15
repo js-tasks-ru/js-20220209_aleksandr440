@@ -1,4 +1,4 @@
-// import SortableList from '../../2-sortable-list/src/index.js';
+import SortableList from '../2-sortable-list/index.js';
 import escapeHtml from './utils/escape-html.js';
 import fetchJson from './utils/fetch-json.js';
 
@@ -42,11 +42,7 @@ export default class ProductForm {
             </div>
             <div class="form-group form-group__wide" data-element="sortable-list-container">
               <label class="form-label">Фото</label>
-              <div data-element="imageListContainer">
-                <ul class="sortable-list">
-                  ${this.getListImages(this.images)}
-                </ul>
-              </div>
+              <div data-element="imageListContainer"></div>
               <button data-element="uploadImage" type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
             </div>
             <div class="form-group form-group__half_left">
@@ -139,8 +135,10 @@ export default class ProductForm {
   }
   getListImages = data => {
     return data.map(({url, source}) => {
-      return this.getImage(url, source).outerHTML;
-    }).join('');
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = this.getImage(url, source).outerHTML;
+      return wrapper.firstElementChild;
+    });
   }
   getImage = (url, name) => {
     const wrapper = document.createElement('div');
@@ -190,6 +188,11 @@ export default class ProductForm {
     this.product = product;
     this.images = product.images;
     this.renderForm();
+
+    this.subElements
+    .imageListContainer
+    .append(new SortableList({items: this.getListImages(this.images)}).element);
+
     if (product) {
       this.setTextFields(product);
       this.initEventListeners();
@@ -245,12 +248,6 @@ export default class ProductForm {
   initEventListeners = () => {
     this.subElements.productForm.addEventListener('submit', this.submitFormHandler);
     this.subElements.uploadImage.addEventListener('click', this.uploadImageHandler);
-    this.subElements.imageListContainer.addEventListener('click', (event) => {
-      
-      if ('deleteHandle' in event.target.dataset) {
-        event.target.closest('li').remove();
-      }
-    });
   }
   getSubElements = el => {
     return [...el.querySelectorAll('[data-element]')].reduce((acc, item) => {
