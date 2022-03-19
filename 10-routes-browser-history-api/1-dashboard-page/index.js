@@ -1,6 +1,6 @@
-import RangePicker from './components/range-picker/src/index.js';
-import SortableTable from './components/sortable-table/src/index.js';
-import ColumnChart from './components/column-chart/src/index.js';
+import RangePicker from '../../08-forms-fetch-api-part-2/2-range-picker/index.js';
+import SortableTable from '../../07-async-code-fetch-api-part-1/2-sortable-table-v3/index.js';
+import ColumnChart from '../../07-async-code-fetch-api-part-1/1-column-chart/index.js';
 import header from './bestsellers-header.js';
 
 import fetchJson from './utils/fetch-json.js';
@@ -102,12 +102,14 @@ export default class Page {
   updateComponents = async (from, to) => {
     const data = await this.loadData(from, to);
     
-    const { sortableTable, chartOrders, chartSales, chartCustomers } = this.components;
+    const { sortableTable, ordersChart, salesChart, customersChart } = this.components;
     
-    sortableTable.update(data);
-    chartOrders.update(from, to);
-    chartSales.update(from, to);
-    chartCustomers.update(from, to);
+    sortableTable._update(data);
+    await Promise.all([
+      ordersChart.update(from, to),
+      salesChart.update(from, to),
+      customersChart.update(from, to),
+    ]);
   }
 
   loadData = async (from, to) => {
